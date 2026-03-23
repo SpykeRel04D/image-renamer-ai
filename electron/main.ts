@@ -12,6 +12,7 @@ const __dirname = path.dirname(__filename);
 
 let mainWindow: BrowserWindow | null = null;
 let abortController: AbortController | null = null;
+let isProcessing = false;
 
 // --- Config persistence (simple JSON file) ---
 const configPath = path.join(app.getPath('userData'), 'settings.json');
@@ -45,7 +46,10 @@ function createWindow(): void {
   });
 
   mainWindow.loadFile(path.join(__dirname, '..', '..', 'electron', 'renderer', 'index.html'));
-  mainWindow.on('closed', () => { mainWindow = null; });
+  mainWindow.on('closed', () => {
+    abortController?.abort();
+    mainWindow = null;
+  });
 }
 
 app.whenReady().then(createWindow);
@@ -67,9 +71,17 @@ ipcMain.handle('open-folder', (_event, { path: folderPath }) => shell.openPath(f
 ipcMain.handle('cancel-processing', () => { abortController?.abort(); });
 
 ipcMain.handle('start-processing', async (_event, guiConfig) => {
-  if (!mainWindow) return;
+  if (!mainWindow || isProcessing) return;
+  isProcessing = true;
   const win = mainWindow;
   abortController = new AbortController();
+
+  // Validate input directory
+  if (!fs.existsSync(guiConfig.inputDir)) {
+    win.webContents.send('processing-error', { message: `La carpeta de entrada no existe: ${guiConfig.inputDir}` });
+    isProcessing = false;
+    return;
+  }
 
   const config: Config = {
     inputDir: guiConfig.inputDir,
@@ -98,21 +110,25 @@ ipcMain.handle('start-processing', async (_event, guiConfig) => {
   let total = 0;
   let phase = '';
 
+  function send(channel: string, data: unknown): void {
+    if (!win.isDestroyed()) win.webContents.send(channel, data);
+  }
+
   const logger: PipelineLogger = {
     log(tag, message) {
-      win.webContents.send('log-entry', { level: tag === 'error' ? 'error' : 'info', tag, message });
+      send('log-entry', { level: tag === 'error' ? 'error' : 'info', tag, message });
     },
     initProgress(label, t) {
       current = 0; errors = 0; total = t; phase = label;
-      win.webContents.send('progress-update', { phase, current, total, message: '' });
+      send('progress-update', { phase, current, total, message: '' });
     },
     tick() {
       current++;
-      win.webContents.send('progress-update', { phase, current, total, message: '' });
+      send('progress-update', { phase, current, total, message: '' });
     },
     tickError() {
       current++; errors++;
-      win.webContents.send('progress-update', { phase, current, total, message: `${errors} errores` });
+      send('progress-update', { phase, current, total, message: `${errors} errores` });
     },
     stopProgress() { /* no-op for GUI */ },
   };
@@ -134,15 +150,19 @@ ipcMain.handle('start-processing', async (_event, guiConfig) => {
     const secs = elapsed % 60;
     const elapsedStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
 
-    win.webContents.send('processing-complete', {
-      totalProcessed: result.converted,
-      errors: result.errors,
-      elapsed: elapsedStr,
-      cost: costStr,
-      outputDir: config.outputDir,
-    });
+    if (!abortController.signal.aborted) {
+      send('processing-complete', {
+        totalProcessed: result.converted,
+        errors: result.errors,
+        elapsed: elapsedStr,
+        cost: costStr,
+        outputDir: config.outputDir,
+      });
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    win.webContents.send('processing-error', { message });
+    send('processing-error', { message });
+  } finally {
+    isProcessing = false;
   }
 });
