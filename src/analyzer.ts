@@ -18,10 +18,12 @@ Responde ÚNICAMENTE con el nombre del archivo, sin extensión, sin explicación
 }
 
 let ai: InstanceType<typeof GoogleGenAI> | null = null;
+let currentApiKey: string | null = null;
 
 function getClient(config: Config): InstanceType<typeof GoogleGenAI> {
-  if (!ai) {
+  if (!ai || currentApiKey !== config.geminiApiKey) {
     ai = new GoogleGenAI({ apiKey: config.geminiApiKey });
+    currentApiKey = config.geminiApiKey;
   }
   return ai;
 }
