@@ -13,10 +13,10 @@
     "typecheck": "tsc --noEmit",
     "electron:dev": "tsc -p tsconfig.electron.json && electron .",
     "electron:build": "tsc -p tsconfig.electron.json",
-    "dist": "npm run electron:build && electron-builder --mac --linux --win",
-    "dist:mac": "npm run electron:build && electron-builder --mac",
-    "dist:linux": "npm run electron:build && electron-builder --linux",
-    "dist:win": "npm run electron:build && electron-builder --win"
+    "dist": "npm run electron:build && electron-builder --mac --linux --win --publish never",
+    "dist:mac": "npm run electron:build && electron-builder --mac --publish never",
+    "dist:linux": "npm run electron:build && electron-builder --linux --publish never",
+    "dist:win": "npm run electron:build && electron-builder --win --publish never"
   },
   "build": {
     "appId": "com.image-renamer-ai.app",
