@@ -52,7 +52,7 @@ All UI on one scrollable page, top to bottom:
 | Gemini API Key | Password input | Masked, stored in electron-store |
 | Idioma | Text input | Default: "español de España" |
 | Contexto | Text input | Default: "e-commerce" |
-| Modelo | Dropdown | Options: gemini-2.0-flash, gemini-2.5-flash-lite, etc. |
+| Modelo | Dropdown | Options from MODEL_PRICING in reporter.ts: gemini-2.0-flash, gemini-2.5-flash-lite, gemini-2.0-flash-lite, gemini-2.5-flash, gemini-2.5-pro |
 | Concurrencia | Number input | Default: 3, range 1-10 |
 | RPM | Number input | Default: 15, range 1-60 |
 | Calidad WebP | Number input/slider | Default: 80, range 1-100 |
@@ -176,7 +176,15 @@ image-renamer-ai/
 Add an optional `EventEmitter` parameter to progress-reporting functions. When provided (Electron mode), emit structured events instead of writing to `cli-progress`. When absent (CLI mode), behavior is unchanged.
 
 ### `src/pipeline.ts`
-Accept an optional event emitter. Pass it through to reporter functions. This is the only change — the pipeline logic itself stays the same.
+Accept an optional event emitter. Pass it through to reporter functions. Note: `runPipeline` has `console.log` calls directly in the function in addition to reporter calls — all output paths must be routed through the event emitter when in Electron mode.
+
+### Cancellation
+
+The `cancel-processing` IPC channel sets a shared `AbortController` signal. The pipeline checks `signal.aborted` before starting each image task. In-flight Gemini API calls are not cancelled (the API client doesn't support it), but no new tasks are started. The UI shows "Cancelado" and re-enables the "Procesar" button.
+
+### Config mapping
+
+The GUI form produces a subset of the full `Config` type (from `src/types.ts`). `electron/main.ts` constructs the full `Config` object, hardcoding CLI-only flags: `dryRun: false`, `analyzeOnly: false`, `convertOnly: false`, `verbose: false`, `reset: false`.
 
 ### No other `src/` files change.
 
@@ -230,6 +238,10 @@ Accept an optional event emitter. Pass it through to reporter functions. This is
   "dist:linux": "npm run electron:build && electron-builder --linux"
 }
 ```
+
+### Native dependencies note
+
+`sharp` and `better-sqlite3` are native Node.js addons that must be rebuilt for Electron's Node ABI. `electron-builder` handles this automatically via its built-in `nativeRebuilder` — no extra config needed, but this is a common source of packaging issues to watch for during build testing.
 
 ### Separate tsconfig for Electron
 
