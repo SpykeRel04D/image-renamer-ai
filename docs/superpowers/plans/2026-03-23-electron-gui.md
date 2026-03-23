@@ -186,9 +186,9 @@ git commit -m "feat: export createCliLogger and MODEL_PRICING from reporter"
 
 This is the largest change. The pipeline accepts an optional `logger` and `signal`, routes all output through the logger, and returns a `PipelineResult`.
 
-- [ ] **Step 1: Update imports and function signature**
+- [ ] **Step 1: Update imports, function signature, and move tokenUsage to top scope**
 
-Add imports for new types. Change `runPipeline` signature:
+Add imports for new types. Change `runPipeline` signature. Move `tokenUsage` declaration to the top of the function so it's available in all code paths (currently it's inside the `if (!config.convertOnly)` block):
 
 ```typescript
 import {
@@ -202,7 +202,10 @@ export async function runPipeline(
 ): Promise<PipelineResult> {
   const logger = options?.logger ?? createCliLogger();
   const signal = options?.signal;
+  const tokenUsage: TokenUsage = { inputTokens: 0, outputTokens: 0, requests: 0 };
 ```
+
+Remove the existing `const tokenUsage` declaration from inside the Phase 2 block (line 44).
 
 - [ ] **Step 2: Replace all console.log calls with logger.log**
 
@@ -246,7 +249,28 @@ if (signal?.aborted) {
 }
 ```
 
-- [ ] **Step 5: Return PipelineResult at the end**
+- [ ] **Step 5: Fix the dry-run/analyzeOnly early return**
+
+The existing early return on lines 104-108 returns `void`. Change it to return a `PipelineResult`:
+
+```typescript
+// Dry run: show preview and exit
+if (config.dryRun || config.analyzeOnly) {
+  printDryRunPreview();
+  const counts = getStatusCounts();
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  closeDb();
+  return {
+    totalImages: total,
+    converted: 0,
+    errors: counts['error'] || 0,
+    pending: counts['pending'] || 0,
+    tokenUsage,
+  };
+}
+```
+
+- [ ] **Step 6: Return PipelineResult at the end**
 
 After the report phase, before `closeDb()`:
 
@@ -266,9 +290,7 @@ return {
 };
 ```
 
-Note: `tokenUsage` variable needs to be moved to the top of the function scope (before Phase 1) so it's available for all code paths.
-
-- [ ] **Step 6: Verify CLI still works**
+- [ ] **Step 7: Verify CLI still works**
 
 ```bash
 npx tsx src/index.ts --help
@@ -276,7 +298,7 @@ npx tsx src/index.ts --help
 
 Expected: help output, no errors.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 git add src/pipeline.ts
@@ -457,6 +479,8 @@ ipcMain.handle('start-processing', async (_event, guiConfig) => {
 
   fs.mkdirSync(config.outputDir, { recursive: true });
 
+  const startTime = Date.now();
+
   // IPC Logger
   let current = 0;
   let errors = 0;
@@ -494,9 +518,15 @@ ipcMain.handle('start-processing', async (_event, guiConfig) => {
       costStr = cost === 0 ? '$0.00 (gratis)' : `$${cost.toFixed(4)}`;
     }
 
+    const elapsed = Math.round((Date.now() - startTime) / 1000);
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+    const elapsedStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+
     win.webContents.send('processing-complete', {
       totalProcessed: result.converted,
       errors: result.errors,
+      elapsed: elapsedStr,
       cost: costStr,
       outputDir: config.outputDir,
     });
@@ -868,6 +898,7 @@ window.api.onProcessingComplete((data) => {
   summaryContent.innerHTML =
     `<p>Imágenes convertidas: <strong>${data.totalProcessed}</strong></p>` +
     `<p>Errores: <strong>${data.errors}</strong></p>` +
+    (data.elapsed ? `<p>Tiempo: <strong>${data.elapsed}</strong></p>` : '') +
     (data.cost ? `<p>Coste estimado: <strong>${data.cost}</strong></p>` : '');
   outputDir = data.outputDir;
 });
