@@ -2,7 +2,7 @@
 
 Renombra tus imagenes con nombres SEO usando inteligencia artificial (Google Gemini) y las convierte a WebP automaticamente.
 
-Disponible como **app de escritorio** (Linux / Mac) o como **herramienta CLI**.
+Disponible como **app de escritorio** (Windows / Mac / Linux) o como **herramienta CLI**.
 
 ## Que hace
 
@@ -23,8 +23,9 @@ logo.svg              ->  logo.svg (copiado sin cambios)
 
 Ve a [**Releases**](../../releases) y descarga:
 
-- **Linux**: `Image.Renamer.AI-x.x.x.AppImage` — abre directamente, sin instalar
+- **Windows**: `Image.Renamer.AI-x.x.x-Setup.exe` — instalador clasico
 - **Mac**: `Image.Renamer.AI-x.x.x.dmg` — arrastra a Aplicaciones
+- **Linux**: `Image.Renamer.AI-x.x.x.AppImage` — abre directamente, sin instalar
 
 > Necesitas una API key de Gemini (gratis). Consiguela en [Google AI Studio](https://aistudio.google.com/apikey).
 
