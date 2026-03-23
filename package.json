@@ -1,7 +1,7 @@
 {
   "name": "image-processor",
   "version": "1.0.0",
-  "description": "CLI tool to rename images with SEO-friendly names using AI vision and convert to WebP",
+  "description": "Desktop app and CLI tool that uses Google Gemini AI to rename images with SEO-friendly names and convert them to WebP",
   "type": "module",
   "main": "dist-electron/electron/main.js",
   "scripts": {

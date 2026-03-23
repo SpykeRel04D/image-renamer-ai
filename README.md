@@ -1,84 +1,84 @@
 # Image Renamer AI
 
-Renombra tus imagenes con nombres SEO usando inteligencia artificial (Google Gemini) y las convierte a WebP automaticamente.
+Rename your images with SEO-friendly names using AI (Google Gemini) and automatically convert them to WebP.
 
-Disponible como **app de escritorio** (Windows / Mac / Linux) o como **herramienta CLI**.
+Available as a **desktop app** (Windows / Mac / Linux) or as a **CLI tool**.
 
-## Que hace
+## What it does
 
-1. **Escanea** una carpeta con imagenes (PNG, JPG, TIFF, BMP, GIF, SVG, WebP)
-2. **Analiza** cada imagen con Google Gemini para generar un nombre descriptivo y SEO-friendly en el idioma que elijas
-3. **Convierte** las imagenes a WebP (excepto SVG, que se copian tal cual)
-4. **Genera** un `mapping.json` con la correspondencia original -> nuevo nombre
+1. **Scans** a folder for images (PNG, JPG, TIFF, BMP, GIF, SVG, WebP)
+2. **Analyzes** each image with Google Gemini to generate a descriptive, SEO-friendly filename in your chosen language
+3. **Converts** images to WebP (SVGs are copied as-is)
+4. **Generates** a `mapping.json` with the original-to-new name mapping
 
-### Ejemplo
+### Example
 
 ```
-IMG_20240315_001.jpg  ->  pan-rustico-masa-madre-corteza-dorada.webp
-DSC_0042.png          ->  croissant-mantequilla-hojaldre-dorado.webp
-logo.svg              ->  logo.svg (copiado sin cambios)
+IMG_20240315_001.jpg  ->  rustic-sourdough-bread-golden-crust.webp
+DSC_0042.png          ->  butter-croissant-flaky-golden.webp
+logo.svg              ->  logo.svg (copied unchanged)
 ```
 
-## Descarga
+## Download
 
-Ve a [**Releases**](../../releases) y descarga:
+Go to [**Releases**](../../releases) and download:
 
-- **Windows**: `Image.Renamer.AI-x.x.x-Setup.exe` — instalador clasico
-- **Mac**: `Image.Renamer.AI-x.x.x.dmg` — arrastra a Aplicaciones
-- **Linux**: `Image.Renamer.AI-x.x.x.AppImage` — abre directamente, sin instalar
+- **Windows**: `.exe` installer
+- **Mac**: `.dmg` — drag to Applications
+- **Linux**: `.AppImage` — run directly, no installation needed
 
-> Necesitas una API key de Gemini (gratis). Consiguela en [Google AI Studio](https://aistudio.google.com/apikey).
+> You need a Gemini API key (free). Get one at [Google AI Studio](https://aistudio.google.com/apikey).
 
-## App de escritorio
+## Desktop App
 
-Abre la app, configura, y pulsa **Procesar**:
+Open the app, configure, and click **Procesar**:
 
-| Campo | Descripcion |
+| Field | Description |
 |-------|-------------|
-| Carpeta de entrada | Carpeta con las imagenes originales |
-| Carpeta de salida | Donde se guardan las imagenes procesadas |
-| Gemini API Key | Tu clave de API (se guarda localmente) |
-| Idioma | Idioma para los nombres generados (ej: "espanol de Espana", "English") |
-| Contexto | Dominio de las imagenes (ej: "panaderia artesanal", "e-commerce", "blog de viajes") |
-| Modelo | Modelo de Gemini a usar (`gemini-2.5-flash-lite` es gratis) |
-| Concurrencia | Llamadas paralelas a la API (1-10) |
-| RPM | Limite de peticiones por minuto (1-60) |
-| Calidad WebP | Calidad de compresion (1-100) |
+| Input folder | Folder with original images |
+| Output folder | Where processed images are saved |
+| Gemini API Key | Your API key (stored locally) |
+| Language | Language for generated names (e.g. "English", "español de España") |
+| Context | Image domain (e.g. "artisan bakery", "e-commerce", "travel blog") |
+| Model | Gemini model to use (`gemini-2.5-flash-lite` is free) |
+| Concurrency | Parallel API calls (1-10) |
+| RPM | Requests per minute limit (1-60) |
+| WebP Quality | Compression quality (1-100) |
 
-La app muestra progreso en tiempo real y un panel de logs. La configuracion se recuerda entre sesiones.
+The app shows real-time progress with a log panel. Settings are remembered between sessions.
 
 ## CLI
 
-Para usuarios avanzados o automatizacion:
+For advanced users or automation:
 
-### Requisitos
+### Requirements
 
 - Node.js 18+
-- API key de Gemini en variable de entorno o `.env`
+- Gemini API key as environment variable or in `.env`
 
-### Instalacion
+### Installation
 
 ```bash
-git clone https://github.com/tu-usuario/image-renamer-ai.git
+git clone https://github.com/SpykeRel04D/image-renamer-ai.git
 cd image-renamer-ai
 npm install
 ```
 
-### Configuracion
+### Configuration
 
-Crea un archivo `.env`:
+Create a `.env` file:
 
 ```
-GEMINI_API_KEY=tu_api_key_aqui
+GEMINI_API_KEY=your_api_key_here
 ```
 
-Opcionalmente, crea un `config.json` para valores por defecto:
+Optionally, create a `config.json` for default values:
 
 ```json
 {
   "input": "./media",
   "output": "./processed",
-  "language": "espanol de Espana",
+  "language": "English",
   "context": "e-commerce",
   "model": "gemini-2.5-flash-lite",
   "concurrency": 3,
@@ -87,77 +87,76 @@ Opcionalmente, crea un `config.json` para valores por defecto:
 }
 ```
 
-### Uso
+### Usage
 
 ```bash
-# Procesar (escanear + analizar + convertir)
+# Full pipeline: scan + analyze + convert
 npm run process
 
-# Solo analizar (ver nombres sin convertir)
+# Dry run: preview names without converting
 npm run process:dry
 
-# Solo analizar (guardar nombres en DB, no convertir)
+# Analyze only: save names to DB, skip conversion
 npm run process:analyze
 
-# Solo convertir (si ya analizaste antes)
+# Convert only: skip analysis, convert previously analyzed images
 npm run process:convert
 
-# Borrar estado y empezar de cero
+# Reset: clear state and start fresh
 npm run process:reset
 ```
 
-### Opciones CLI
+### CLI Options
 
 ```
---input <dir>       Carpeta de entrada
---output <dir>      Carpeta de salida
---model <model>     Modelo de Gemini
---language <lang>   Idioma para los nombres
---context <ctx>     Contexto/dominio de las imagenes
---concurrency <n>   Llamadas paralelas a la API
---rpm <n>           Limite de peticiones por minuto
---quality <n>       Calidad WebP (1-100)
---dry-run           Previsualizar nombres sin convertir
---analyze-only      Solo analizar
---convert-only      Solo convertir
---reset             Borrar estado
---verbose           Logs detallados
+--input <dir>       Input directory
+--output <dir>      Output directory
+--model <model>     Gemini model
+--language <lang>   Language for generated names
+--context <ctx>     Image context/domain
+--concurrency <n>   Parallel API calls
+--rpm <n>           Requests per minute limit
+--quality <n>       WebP quality (1-100)
+--dry-run           Preview names without converting
+--analyze-only      Only analyze
+--convert-only      Only convert
+--reset             Clear state
+--verbose           Detailed logs
 ```
 
-## Desarrollo
+## Development
 
-### Ejecutar la app Electron en modo desarrollo
+### Run the Electron app in dev mode
 
 ```bash
 npm run electron:dev
 ```
 
-> En Linux puede requerir `--no-sandbox`: `npx electron . --no-sandbox`
-
-### Generar ejecutables
+### Build distributables
 
 ```bash
 npm run dist:linux    # .AppImage
 npm run dist:mac      # .dmg
+npm run dist:win      # .exe
 ```
 
-## Modelos disponibles
+## Available Models
 
-| Modelo | Precio |
-|--------|--------|
-| `gemini-2.5-flash-lite` | Gratis |
-| `gemini-2.0-flash-lite` | $0.075 / 1M tokens input |
-| `gemini-2.0-flash` | $0.10 / 1M tokens input |
-| `gemini-2.5-flash` | $0.15 / 1M tokens input |
-| `gemini-2.5-pro` | $1.25 / 1M tokens input |
+| Model | Price |
+|-------|-------|
+| `gemini-2.5-flash-lite` | Free |
+| `gemini-2.0-flash-lite` | $0.075 / 1M input tokens |
+| `gemini-2.0-flash` | $0.10 / 1M input tokens |
+| `gemini-2.5-flash` | $0.15 / 1M input tokens |
+| `gemini-2.5-pro` | $1.25 / 1M input tokens |
 
-## Tecnologias
+## Tech Stack
 
-- [Google Gemini](https://ai.google.dev/) — Vision AI para analisis de imagenes
-- [Sharp](https://sharp.pixelplumbing.com/) — Conversion a WebP
-- [Electron](https://www.electronjs.org/) — App de escritorio multiplataforma
-- [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) — Estado persistente para reanudar procesamiento
+- [Google Gemini](https://ai.google.dev/) — Vision AI for image analysis
+- [Sharp](https://sharp.pixelplumbing.com/) — WebP conversion
+- [Electron](https://www.electronjs.org/) — Cross-platform desktop app
+- [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) — Persistent state for resumable processing
 
-## Licencia
+## License
 
 MIT
