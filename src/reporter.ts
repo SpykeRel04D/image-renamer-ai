@@ -2,7 +2,7 @@ import cliProgress from 'cli-progress';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { getConvertedImages, getStatusCounts, getAllImages } from './db.js';
-import type { ScanResult, TokenUsage } from './types.js';
+import type { ScanResult, TokenUsage, PipelineLogger } from './types.js';
 
 let bar: cliProgress.SingleBar | null = null;
 let errorCount = 0;
@@ -80,7 +80,7 @@ export async function generateMappingJson(outputDir: string): Promise<string> {
 }
 
 // Pricing per million tokens (USD) — source: ai.google.dev/gemini-api/docs/pricing
-const MODEL_PRICING: Record<string, { input: number; output: number }> = {
+export const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'gemini-2.5-flash-lite': { input: 0.00, output: 0.00 },   // free tier
   'gemini-2.5-flash':      { input: 0.15, output: 0.60 },
   'gemini-2.5-pro':        { input: 1.25, output: 10.00 },
@@ -136,4 +136,14 @@ export function printSummary(): void {
       console.log(`  ... and ${errors.length - 10} more`);
     }
   }
+}
+
+export function createCliLogger(): PipelineLogger {
+  return {
+    log: (_tag, message) => console.log(message),
+    initProgress: initProgressBar,
+    tick,
+    tickError,
+    stopProgress: stopProgressBar,
+  };
 }
