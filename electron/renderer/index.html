@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Renamer AI</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Image Renamer AI</h1>
+      <p class="subtitle">Renombra imágenes con IA y convierte a WebP</p>
+    </header>
+
+    <form id="config-form">
+      <div class="row">
+        <div class="field">
+          <label for="input-dir">Carpeta de entrada</label>
+          <div class="path-selector">
+            <input type="text" id="input-dir" readonly placeholder="Selecciona carpeta...">
+            <button type="button" class="btn-secondary" data-select="input-dir">Elegir</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="output-dir">Carpeta de salida</label>
+          <div class="path-selector">
+            <input type="text" id="output-dir" readonly placeholder="Selecciona carpeta...">
+            <button type="button" class="btn-secondary" data-select="output-dir">Elegir</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="api-key">Gemini API Key</label>
+        <input type="password" id="api-key" placeholder="AIza...">
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="language">Idioma</label>
+          <input type="text" id="language" value="español de España">
+        </div>
+        <div class="field">
+          <label for="context">Contexto</label>
+          <input type="text" id="context" value="e-commerce">
+        </div>
+      </div>
+
+      <div class="row row-4">
+        <div class="field">
+          <label for="model">Modelo</label>
+          <select id="model">
+            <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite (gratis)</option>
+            <option value="gemini-2.0-flash" selected>gemini-2.0-flash</option>
+            <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite</option>
+            <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+            <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="concurrency">Concurrencia</label>
+          <input type="number" id="concurrency" value="3" min="1" max="10">
+        </div>
+        <div class="field">
+          <label for="rpm">RPM</label>
+          <input type="number" id="rpm" value="15" min="1" max="60">
+        </div>
+        <div class="field">
+          <label for="quality">Calidad WebP</label>
+          <input type="number" id="quality" value="80" min="1" max="100">
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" id="btn-process" class="btn-primary">▶ Procesar</button>
+        <button type="button" id="btn-cancel" class="btn-danger" style="display:none;">✕ Cancelar</button>
+      </div>
+    </form>
+
+    <div id="progress-section" style="display:none;">
+      <div class="progress-header">
+        <span id="progress-phase">Procesando...</span>
+        <span id="progress-count">0/0</span>
+      </div>
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+    </div>
+
+    <div id="log-panel" class="log-panel">
+      <div id="log-content"></div>
+    </div>
+
+    <div id="summary-section" style="display:none;">
+      <div class="summary">
+        <h3>Procesamiento completado</h3>
+        <div id="summary-content"></div>
+        <button type="button" id="btn-open-folder" class="btn-secondary">Abrir carpeta de salida</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
