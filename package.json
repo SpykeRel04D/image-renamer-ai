@@ -34,6 +34,11 @@
       "dist-electron/**/*",
       "electron/preload.cjs",
       "electron/renderer/**/*"
+    ],
+    "asarUnpack": [
+      "node_modules/sharp/**",
+      "node_modules/@img/**",
+      "node_modules/better-sqlite3/**"
     ]
   },
   "dependencies": {
