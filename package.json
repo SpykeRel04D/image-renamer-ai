@@ -1,9 +1,9 @@
 {
   "name": "image-processor",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Desktop app and CLI tool that uses Google Gemini AI to rename images with SEO-friendly names and convert them to WebP",
   "type": "module",
-  "main": "electron-main.cjs",
+  "main": "dist-electron/electron/main.js",
   "scripts": {
     "process": "tsx src/index.ts",
     "process:dry": "tsx src/index.ts --dry-run",
@@ -32,7 +32,6 @@
     },
     "afterPack": "./scripts/afterPack.cjs",
     "files": [
-      "electron-main.cjs",
       "dist-electron/**/*",
       "electron/preload.cjs",
       "electron/renderer/**/*"
