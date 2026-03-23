@@ -13,15 +13,17 @@
     "typecheck": "tsc --noEmit",
     "electron:dev": "tsc -p tsconfig.electron.json && electron .",
     "electron:build": "tsc -p tsconfig.electron.json",
-    "dist": "npm run electron:build && electron-builder --mac --linux",
+    "dist": "npm run electron:build && electron-builder --mac --linux --win",
     "dist:mac": "npm run electron:build && electron-builder --mac",
-    "dist:linux": "npm run electron:build && electron-builder --linux"
+    "dist:linux": "npm run electron:build && electron-builder --linux",
+    "dist:win": "npm run electron:build && electron-builder --win"
   },
   "build": {
     "appId": "com.image-renamer-ai.app",
     "productName": "Image Renamer AI",
     "mac": { "target": "dmg" },
     "linux": { "target": "AppImage" },
+    "win": { "target": "nsis" },
     "files": [
       "dist-electron/**/*",
       "electron/preload.cjs",
