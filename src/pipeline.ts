@@ -9,49 +9,53 @@ import { EXTENSION_TO_MIME } from './config.js';
 import {
   initDb, crashRecovery, resetAll, closeDb,
   getImagesByStatus, updateImageAnalysis, updateImageConverted,
-  updateImageError, updateImageStatus,
+  updateImageError, updateImageStatus, getStatusCounts,
 } from './db.js';
 import {
-  logScanComplete, initProgressBar, tick, tickError,
-  stopProgressBar, printDryRunPreview, generateMappingJson, printSummary,
-  printTokenUsage,
+  createCliLogger, generateMappingJson, printTokenUsage, printSummary, printDryRunPreview,
 } from './reporter.js';
 import { RateLimiter } from './rate-limiter.js';
-import type { Config, ImageRecord, TokenUsage } from './types.js';
+import type { Config, ImageRecord, TokenUsage, PipelineLogger, PipelineResult } from './types.js';
 
-export async function runPipeline(config: Config): Promise<void> {
+export async function runPipeline(
+  config: Config,
+  options?: { logger?: PipelineLogger; signal?: AbortSignal }
+): Promise<PipelineResult> {
+  const logger = options?.logger ?? createCliLogger();
+  const signal = options?.signal;
+  const tokenUsage: TokenUsage = { inputTokens: 0, outputTokens: 0, requests: 0 };
+
   // Initialize
   initDb(config.outputDir);
 
   if (config.reset) {
     resetAll();
-    console.log('State cleared. Starting fresh.');
+    logger.log('system', 'State cleared. Starting fresh.');
   }
 
   crashRecovery();
 
   // Phase 1: Scan
   if (!config.convertOnly) {
-    console.log(`Scanning ${config.inputDir}...`);
+    logger.log('scan', `Scanning ${config.inputDir}...`);
     const scanResult = await scanDirectory(config.inputDir);
-    logScanComplete(scanResult);
+    logger.log('scan', `Scan complete: ${scanResult.total} images found (${scanResult.newImages} new, ${scanResult.skipped} already in DB)`);
   }
 
   // Phase 2: Analyze
   if (!config.convertOnly) {
     const pending = getImagesByStatus('pending');
 
-    const tokenUsage: TokenUsage = { inputTokens: 0, outputTokens: 0, requests: 0 };
-
     if (pending.length > 0) {
-      console.log(`\nAnalyzing ${pending.length} images with Gemini (${config.rpm} RPM, concurrency ${config.concurrency})...`);
-      initProgressBar('Analyzing', pending.length);
+      logger.log('analyze', `Analyzing ${pending.length} images with Gemini (${config.rpm} RPM, concurrency ${config.concurrency})...`);
+      logger.initProgress('Analyzing', pending.length);
 
       const limiter = new RateLimiter(config.rpm);
       const semaphore = pLimit(config.concurrency);
 
       const tasks = pending.map(image =>
         semaphore(async () => {
+          if (signal?.aborted) return;
           await limiter.acquire();
           try {
             updateImageStatus(image.id, 'analyzing');
@@ -80,31 +84,43 @@ export async function runPipeline(config: Config): Promise<void> {
               output_path: outputPath,
             });
 
-            tick();
+            logger.tick();
           } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
             updateImageError(image.id, msg);
-            if (config.verbose) {
-              console.log(`\n  Error analyzing ${image.original_path}: ${msg}`);
-            }
-            tickError();
+            logger.log('error', `Error analyzing ${image.original_path}: ${msg}`);
+            logger.tickError();
           }
         })
       );
 
       await Promise.allSettled(tasks);
-      stopProgressBar();
+      logger.stopProgress();
       printTokenUsage(tokenUsage, config.geminiModel);
     } else {
-      console.log('\nNo pending images to analyze.');
+      logger.log('analyze', 'No pending images to analyze.');
     }
   }
 
   // Dry run: show preview and exit
   if (config.dryRun || config.analyzeOnly) {
     printDryRunPreview();
+    const counts = getStatusCounts();
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
     closeDb();
-    return;
+    return {
+      totalImages: total,
+      converted: 0,
+      errors: counts['error'] || 0,
+      pending: counts['pending'] || 0,
+      tokenUsage,
+    };
+  }
+
+  // Abort check before convert phase
+  if (signal?.aborted) {
+    closeDb();
+    return { totalImages: 0, converted: 0, errors: 0, pending: 0, tokenUsage };
   }
 
   // Phase 3: Convert
@@ -113,13 +129,14 @@ export async function runPipeline(config: Config): Promise<void> {
 
     if (analyzed.length > 0) {
       const cpuConcurrency = Math.min(os.cpus().length, 10);
-      console.log(`\nConverting ${analyzed.length} images to WebP (concurrency ${cpuConcurrency})...`);
-      initProgressBar('Converting', analyzed.length);
+      logger.log('convert', `Converting ${analyzed.length} images to WebP (concurrency ${cpuConcurrency})...`);
+      logger.initProgress('Converting', analyzed.length);
 
       const semaphore = pLimit(cpuConcurrency);
 
       const tasks = analyzed.map(image =>
         semaphore(async () => {
+          if (signal?.aborted) return;
           try {
             updateImageStatus(image.id, 'converting');
 
@@ -135,29 +152,39 @@ export async function runPipeline(config: Config): Promise<void> {
             }
 
             updateImageConverted(image.id);
-            tick();
+            logger.tick();
           } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
             updateImageError(image.id, msg);
-            if (config.verbose) {
-              console.log(`\n  Error converting ${image.original_path}: ${msg}`);
-            }
-            tickError();
+            logger.log('error', `Error converting ${image.original_path}: ${msg}`);
+            logger.tickError();
           }
         })
       );
 
       await Promise.allSettled(tasks);
-      stopProgressBar();
+      logger.stopProgress();
     } else {
-      console.log('\nNo analyzed images to convert.');
+      logger.log('convert', 'No analyzed images to convert.');
     }
   }
 
   // Phase 4: Report
   const mappingPath = await generateMappingJson(config.outputDir);
-  console.log(`\nMapping saved to: ${mappingPath}`);
+  logger.log('report', `Mapping saved to: ${mappingPath}`);
   printSummary();
 
+  const counts = getStatusCounts();
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+
   closeDb();
+
+  return {
+    totalImages: total,
+    converted: counts['converted'] || 0,
+    errors: counts['error'] || 0,
+    pending: counts['pending'] || 0,
+    tokenUsage,
+    mappingPath,
+  };
 }
