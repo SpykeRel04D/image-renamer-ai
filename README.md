@@ -1,5 +1,10 @@
 # Image Renamer AI
 
+[![GitHub Release](https://img.shields.io/github/v/release/SpykeRel04D/image-renamer-ai)](https://github.com/SpykeRel04D/image-renamer-ai/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/SpykeRel04D/image-renamer-ai/total)](https://github.com/SpykeRel04D/image-renamer-ai/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Mac%20%7C%20Linux-lightgrey)]()
+
 Rename your images with SEO-friendly names using AI (Google Gemini) and automatically convert them to WebP.
 
 Available as a **desktop app** (Windows / Mac / Linux) or as a **CLI tool**.
