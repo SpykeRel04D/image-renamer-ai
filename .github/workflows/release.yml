@@ -28,6 +28,25 @@ jobs:
           name: linux
           path: dist/*.AppImage
 
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run dist:win
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/*.exe
+
   build-mac:
     runs-on: macos-latest
     steps:
@@ -48,7 +67,7 @@ jobs:
           path: dist/*.dmg
 
   release:
-    needs: [build-linux, build-mac]
+    needs: [build-linux, build-mac, build-windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -64,5 +83,6 @@ jobs:
           gh release create "${{ github.ref_name }}" \
             artifacts/linux/*.AppImage \
             artifacts/mac/*.dmg \
+            artifacts/windows/*.exe \
             --title "${{ github.ref_name }}" \
             --generate-notes
