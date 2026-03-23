@@ -1,0 +1,30 @@
+{
+  "name": "image-processor",
+  "version": "1.0.0",
+  "description": "CLI tool to rename images with SEO-friendly names using AI vision and convert to WebP",
+  "type": "module",
+  "scripts": {
+    "process": "tsx src/index.ts",
+    "process:dry": "tsx src/index.ts --dry-run",
+    "process:analyze": "tsx src/index.ts --analyze-only",
+    "process:convert": "tsx src/index.ts --convert-only",
+    "process:reset": "tsx src/index.ts --reset",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@google/genai": "^1.0.0",
+    "better-sqlite3": "^11.0.0",
+    "cli-progress": "^3.12.0",
+    "commander": "^12.0.0",
+    "dotenv": "^16.0.0",
+    "p-limit": "^6.0.0",
+    "sharp": "^0.33.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.0.0",
+    "@types/cli-progress": "^3.0.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
