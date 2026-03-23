@@ -2,10 +2,6 @@ import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-
-if (process.platform === 'linux') {
-  app.commandLine.appendSwitch('no-sandbox');
-}
 import { runPipeline } from '../src/pipeline.js';
 import { MODEL_PRICING } from '../src/reporter.js';
 import { DEFAULTS } from '../src/config.js';
