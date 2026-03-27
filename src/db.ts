@@ -44,6 +44,9 @@ export function crashRecovery(): void {
   const d = getDb();
   d.prepare("UPDATE images SET status = 'pending' WHERE status = 'analyzing'").run();
   d.prepare("UPDATE images SET status = 'analyzed' WHERE status = 'converting'").run();
+  // Retry failed images: analysis errors → pending, conversion errors → analyzed
+  d.prepare("UPDATE images SET status = 'pending', error_message = NULL WHERE status = 'error' AND ai_description IS NULL").run();
+  d.prepare("UPDATE images SET status = 'analyzed', error_message = NULL WHERE status = 'error' AND ai_description IS NOT NULL").run();
 }
 
 export function insertImage(record: {
