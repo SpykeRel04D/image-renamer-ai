@@ -12,6 +12,6 @@
     "resolveJsonModule": true,
     "sourceMap": true
   },
-  "include": ["electron/main.ts", "src/**/*.ts"],
+  "include": ["electron/main.ts", "electron/update-checker.ts", "src/**/*.ts"],
   "exclude": ["node_modules", "dist", "dist-electron"]
 }
