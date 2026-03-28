@@ -1,5 +1,4 @@
-import { app, dialog, shell, BrowserWindow } from 'electron';
-import { net } from 'electron';
+import { app, BrowserWindow, dialog, net, shell } from 'electron';
 
 const REPO = 'SpykeRel04D/image-renamer-ai';
 
@@ -14,6 +13,7 @@ function isNewer(remote: string, local: string): boolean {
   for (let i = 0; i < Math.max(r.length, l.length); i++) {
     const rp = r[i] ?? 0;
     const lp = l[i] ?? 0;
+    if (isNaN(rp) || isNaN(lp)) return false;
     if (rp > lp) return true;
     if (rp < lp) return false;
   }
@@ -44,7 +44,7 @@ export async function checkForUpdates(win: BrowserWindow): Promise<void> {
     });
 
     if (response === 0) {
-      await shell.openExternal(`https://github.com/${REPO}/releases/tag/${data.tag_name}`);
+      await shell.openExternal(data.html_url);
     }
   } catch {
     // No internet or API error — fail silently
