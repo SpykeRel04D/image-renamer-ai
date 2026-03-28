@@ -6,6 +6,7 @@ import { runPipeline } from '../src/pipeline.js';
 import { MODEL_PRICING } from '../src/reporter.js';
 import { DEFAULTS } from '../src/config.js';
 import type { Config, PipelineLogger } from '../src/types.js';
+import { checkForUpdates } from './update-checker.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -52,7 +53,12 @@ function createWindow(): void {
   });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  if (mainWindow) {
+    checkForUpdates(mainWindow);
+  }
+});
 app.on('window-all-closed', () => app.quit());
 
 // --- IPC Handlers ---
