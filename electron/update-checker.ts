@@ -24,20 +24,27 @@ export async function checkForUpdates(win: BrowserWindow): Promise<void> {
   try {
     const res = await net.fetch(
       `https://api.github.com/repos/${REPO}/releases/latest`,
-      { headers: { Accept: 'application/vnd.github.v3+json' } }
+      {
+        headers: {
+          Accept: 'application/vnd.github.v3+json',
+          'User-Agent': `image-renamer-ai/${app.getVersion()}`,
+        },
+      }
     );
     if (!res.ok) return;
 
     const data = (await res.json()) as GitHubRelease;
-    const remoteVersion = data.tag_name.replace(/^v/, '');
+    const remoteVersion = data.tag_name;
     const localVersion = app.getVersion();
 
     if (!isNewer(remoteVersion, localVersion)) return;
 
+    if (win.isDestroyed()) return;
+
     const { response } = await dialog.showMessageBox(win, {
       type: 'info',
       title: 'Actualización disponible',
-      message: `Hay una nueva versión disponible: ${remoteVersion}.\nTu versión actual es: ${localVersion}.`,
+      message: `Hay una nueva versión disponible: ${remoteVersion.replace(/^v/, '')}.\nTu versión actual es: ${localVersion}.`,
       buttons: ['Descargar', 'Cerrar'],
       defaultId: 0,
       cancelId: 1,
