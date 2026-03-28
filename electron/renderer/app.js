@@ -10,6 +10,7 @@ const logPanel = document.getElementById('log-panel');
 const summarySection = document.getElementById('summary-section');
 const summaryContent = document.getElementById('summary-content');
 const btnOpenFolder = document.getElementById('btn-open-folder');
+const btnClearCache = document.getElementById('btn-clear-cache');
 
 let outputDir = '';
 let logLines = 0;
@@ -119,6 +120,24 @@ window.api.onProcessingError((data) => {
   addLog('error', 'Error fatal: ' + data.message);
 });
 
+// --- Clear cache ---
+btnClearCache.addEventListener('click', async () => {
+  const outDir = document.getElementById('output-dir').value;
+  if (!outDir) {
+    alert('Selecciona primero una carpeta de salida.');
+    return;
+  }
+  if (!confirm('Esto borrará el historial de procesamiento. Las imágenes ya convertidas no se eliminarán, pero se volverán a procesar.\n\n¿Continuar?')) {
+    return;
+  }
+  const result = await window.api.clearCache(outDir);
+  if (result.success) {
+    addLog('system', result.deleted ? 'Caché limpiada. Las imágenes se reprocesarán.' : 'No había caché que limpiar.');
+  } else {
+    addLog('error', result.message);
+  }
+});
+
 // --- Open output folder ---
 btnOpenFolder.addEventListener('click', () => {
   if (outputDir) window.api.openFolder(outputDir);
@@ -128,6 +147,7 @@ btnOpenFolder.addEventListener('click', () => {
 function setProcessing(active) {
   btnProcess.style.display = active ? 'none' : '';
   btnCancel.style.display = active ? '' : 'none';
+  btnClearCache.disabled = active;
   form.querySelectorAll('input, select').forEach(el => el.disabled = active);
   form.querySelectorAll('[data-select]').forEach(el => el.disabled = active);
 }

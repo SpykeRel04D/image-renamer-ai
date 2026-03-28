@@ -72,7 +72,15 @@ input:disabled, select:disabled { opacity: 0.5; }
   font-size: 14px; font-weight: 600; cursor: pointer;
 }
 
-.actions { text-align: center; margin: 20px 0; }
+.actions { text-align: center; margin: 20px 0; display: flex; justify-content: center; gap: 12px; align-items: center; }
+
+.btn-clear-cache {
+  background: transparent; color: var(--text-secondary);
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 10px 20px; font-size: 12px; cursor: pointer;
+}
+.btn-clear-cache:hover { color: var(--warning); border-color: var(--warning); }
+.btn-clear-cache:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .progress-header {
   display: flex; justify-content: space-between;

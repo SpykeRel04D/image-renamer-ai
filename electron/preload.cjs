@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('api', {
   getSavedConfig: () => ipcRenderer.invoke('get-saved-config'),
   saveConfig: (config) => ipcRenderer.invoke('save-config', config),
   openFolder: (folderPath) => ipcRenderer.invoke('open-folder', { path: folderPath }),
+  clearCache: (outputDir) => ipcRenderer.invoke('clear-cache', { outputDir }),
   onProgressUpdate: (callback) => {
     ipcRenderer.on('progress-update', (_event, data) => callback(data));
   },

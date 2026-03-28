@@ -76,6 +76,21 @@ ipcMain.handle('save-config', (_event, config) => saveConfigToFile(config));
 ipcMain.handle('open-folder', (_event, { path: folderPath }) => shell.openPath(folderPath));
 ipcMain.handle('cancel-processing', () => { abortController?.abort(); });
 
+ipcMain.handle('clear-cache', (_event, { outputDir }: { outputDir: string }) => {
+  if (isProcessing) return { success: false, message: 'No se puede limpiar mientras se procesa.' };
+  const dbPath = path.join(outputDir, '.image-processor-state.db');
+  const walPath = dbPath + '-wal';
+  const shmPath = dbPath + '-shm';
+  let deleted = false;
+  for (const file of [dbPath, walPath, shmPath]) {
+    if (fs.existsSync(file)) {
+      fs.unlinkSync(file);
+      deleted = true;
+    }
+  }
+  return { success: true, deleted };
+});
+
 ipcMain.handle('start-processing', async (_event, guiConfig) => {
   if (!mainWindow || isProcessing) return;
   isProcessing = true;
